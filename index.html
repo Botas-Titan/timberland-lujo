@@ -579,6 +579,27 @@ textarea.form-input{resize:none;min-height:70px;line-height:1.5}
   .form-input{font-size:16px;padding:14px 15px} /* 16px evita zoom en iOS */
 }
 </style>
+
+<!-- ══════ META PIXEL — TITAN PAGE ══════ -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1144054234533206');
+fbq('track', 'PageView');
+fbq('track', 'ViewContent', {
+  content_name: 'TIMBERLAND DE LUJO',
+  content_ids: ['timberland-lujo'],
+  content_type: 'product',
+  value: 160000,
+  currency: 'COP'
+});
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1144054234533206&ev=PageView&noscript=1"/></noscript>
+<!-- ══════ FIN META PIXEL ══════ -->
 </head>
 <body>
 
@@ -1674,6 +1695,18 @@ async function submitMainForm(e){
       total: total
     });
   }
+  // ── Meta Pixel: Purchase (pedido confirmado en el formulario) ──
+  if(window.fbq){
+    fbq('track','Purchase',{
+      content_name:'TIMBERLAND DE LUJO',
+      content_ids:['timberland-lujo'],
+      content_type:'product',
+      contents: mfPairs.map(function(p){return {id:'timberland-lujo-'+p.sz, quantity:p.qty, item_price:PRICE};}),
+      num_items: mfPairs.reduce(function(a,p){return a+p.qty;},0),
+      value: total,
+      currency:'COP'
+    });
+  }
   window.location.href='https://wa.me/573134379721?text='+encodeURIComponent(lines.join('\n'));
 }
 
@@ -1777,6 +1810,48 @@ window.addEventListener('scroll',function(){
   };
 </script>
 
+
+<!-- ══════ EVENTOS META PIXEL ══════ -->
+<script>
+(function(){
+  function fire(ev, data){ if(window.fbq) fbq('track', ev, data || {}); }
+
+  // Lead: cualquier clic que lleve a WhatsApp (flotante, popups, footer, asesor)
+  var leadEnviado = false;
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('a, button');
+    if(!el) return;
+    var href = el.getAttribute('href') || '';
+    var oc   = el.getAttribute('onclick') || '';
+    if(href.indexOf('wa.me') === -1 && oc.indexOf('wa.me') === -1) return;
+    if(el.id === 'btnPedidoFinal') return;          // ese dispara Purchase
+    if(leadEnviado) return;
+    leadEnviado = true;
+    fire('Lead', {
+      content_name: 'TIMBERLAND DE LUJO',
+      content_category: 'WhatsApp asesor',
+      value: 160000, currency: 'COP'
+    });
+  }, true);
+
+  // InitiateCheckout: cuando baja al formulario de pedido
+  var icEnviado = false;
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('button, a');
+    if(!el || icEnviado) return;
+    var oc = el.getAttribute('onclick') || '';
+    if(oc.indexOf('pedidoForm') === -1) return;
+    icEnviado = true;
+    fire('InitiateCheckout', {
+      content_name: 'TIMBERLAND DE LUJO',
+      content_ids: ['timberland-lujo'],
+      content_type: 'product',
+      value: 160000, currency: 'COP'
+    });
+  }, true);
+})();
+</script>
+<!-- ══════ FIN EVENTOS ══════ -->
 </body>
 </html>
                                                                                                                                                                                                                                                 
