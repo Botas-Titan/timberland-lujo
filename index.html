@@ -1657,9 +1657,8 @@ function mfRenderPairs(){
 
 // ── NOTIFICACIÓN DE PEDIDO AL CORREO ──
 // Se envía a través de FormSubmit (sin servidor propio, sin costo).
-// Cambia DESTINO por el código alias que FormSubmit te manda en el correo
-// de activación, para no dejar tu correo visible en el código.
-var NOTIF_DESTINO = 'kcramirezariza@gmail.com';
+// Usa el alias de FormSubmit, no el correo, para no exponerlo a robots de spam.
+var NOTIF_DESTINO = '72386c2d31f9a4b7a3a1bfebaf2c6b57';
 
 function notificarPedido(d){
   var detalle = d.pedido.map(function(p){
