@@ -1340,7 +1340,7 @@ src="https://www.facebook.com/tr?id=1144054234533206&ev=PageView&noscript=1"/></
 <script>
 // ── CART ──
 var cart=[];
-var PRICE=145000;
+var PRICE=160000;
 
 function addToCart(){
   var sel=document.querySelector('.sz-btn.sel');
@@ -1654,6 +1654,53 @@ function mfRenderPairs(){
   totalEl.textContent='$'+formatNum(total);
 }
 
+
+// ── NOTIFICACIÓN DE PEDIDO AL CORREO ──
+// Se envía a través de FormSubmit (sin servidor propio, sin costo).
+// Cambia DESTINO por el código alias que FormSubmit te manda en el correo
+// de activación, para no dejar tu correo visible en el código.
+var NOTIF_DESTINO = 'kcramirezariza@gmail.com';
+
+function notificarPedido(d){
+  var detalle = d.pedido.map(function(p){
+    return 'Talla ' + p.talla + ' x ' + p.cantidad + ' par(es) = $' + formatNum(p.precio * p.cantidad);
+  }).join('\n');
+
+  var cuerpo = [
+    'PRODUCTO: TIMBERLAND DE LUJO',
+    '',
+    detalle,
+    'TOTAL: $' + formatNum(d.total),
+    '',
+    'CLIENTE: ' + d.nombre,
+    'TELEFONO: ' + d.telefono,
+    'CIUDAD: ' + d.ciudad,
+    'DIRECCION: ' + d.direccion,
+    'NOTA: ' + (d.observaciones || 'ninguna'),
+    '',
+    'Fecha: ' + new Date().toLocaleString('es-CO', {timeZone: 'America/Bogota'})
+  ].join('\n');
+
+  return fetch('https://formsubmit.co/ajax/' + NOTIF_DESTINO, {
+    method: 'POST',
+    keepalive: true,
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+    body: JSON.stringify({
+      _subject: 'NUEVO PEDIDO Timberland de Lujo - ' + d.nombre + ' - $' + formatNum(d.total),
+      _template: 'box',
+      _captcha: 'false',
+      Cliente: d.nombre,
+      Telefono: d.telefono,
+      Ciudad: d.ciudad,
+      Direccion: d.direccion,
+      Total: '$' + formatNum(d.total),
+      Pedido: detalle.replace(/\n/g, ' | '),
+      Observaciones: d.observaciones || 'ninguna',
+      message: cuerpo
+    })
+  });
+}
+
 async function submitMainForm(e){
   e.preventDefault();
   if(mfPairs.length===0){
@@ -1695,6 +1742,20 @@ async function submitMainForm(e){
       total: total
     });
   }
+  // ── Avisar el pedido al correo (no bloquea mas de 2.5s) ──
+  var datosPedido = {
+    producto:'TIMBERLAND DE LUJO',
+    nombre:nombre, telefono:tel, ciudad:ciudad, direccion:dir, observaciones:obs,
+    pedido: mfPairs.map(function(p){return {talla:p.sz, cantidad:p.qty, precio:PRICE};}),
+    total: total
+  };
+  try{
+    await Promise.race([
+      notificarPedido(datosPedido),
+      new Promise(function(r){setTimeout(r, 2500);})
+    ]);
+  }catch(err){ /* si falla el correo, el pedido igual sigue a WhatsApp */ }
+
   // ── Meta Pixel: Purchase (pedido confirmado en el formulario) ──
   if(window.fbq){
     fbq('track','Purchase',{
